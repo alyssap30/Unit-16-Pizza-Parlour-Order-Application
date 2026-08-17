@@ -1,0 +1,119 @@
+BEGIN
+
+// Variable initialisation
+SET pizzaChoices AS DICTIONARY 
+SET toppingChoices AS DICTIONARY
+SET sideChoices AS DICTIONARY
+SET cart AS LIST
+
+CLASS Item
+	CONSTRUCTOR
+		SET self.name TO name
+		SET self.price TO price 
+	END CONSTRUCTOR
+	
+FUNCTION getDetails()
+	RETURN name + “£” + FORMAT(price. 2dp)
+END FUNCTION
+END CLASS
+
+CLASS Pizza INHERITS Item
+	CONSTRUCTOR(pizzaType, pizzaSize, toppingSelection)
+		SET basePrice TO pizzaChoices[pizzaType]
+SET pizzaPrice TO (basePrice * pizzaSize)  + SUM(toppingSelection FOR EACH topping in toppingList)
+		CALL SUPER CONSTRUCTOR WITH (pizzaType, pizzaPrice)
+		SET self.size TO size
+SET self.selectedToppings TO toppingList
+END CONSTRUCTOR
+
+FUNCTION getDetails()
+RETURN FORMATED STRING WITH pizzaType, pizzaSize, toppingSelection, pizzaPrice
+	END FUNCTION
+END CLASS
+
+CLASS sideOrder INHERITS Item
+	CONSTRUCTOR(name, quantity)
+		SET totalSidePrice TO sideChoices[name] * quantity
+		CALL SUPER CONSTRUCTOR WITH (name, totalSidePrice)
+SET self.quantity TO quantity
+	END CONSTRUCTOR
+
+	FUNCTION getDetails()
+		RETURN FORMATED STRING WITH sideName, quantity, sidePrice
+	END FUNCTION
+END CLASS
+
+CLASS sideOrderGUI
+	CONSTRUCTOR(root)
+		SET self.window TO root
+		SET windowGeometry TO 500 by 400 pixels
+		SET windowTitle TO “Side Orders”
+		SET self.selectedSides AS DICTIONARY
+	END CONSTRUCTOR
+	
+	FUNCTION validate()
+		FOR EACH side IN sideChoices
+		GET quantity FROM SPINBOX
+		IF quantity > 0 THEN
+			CREATE new SideOrder object 
+			APPEND SideOrder object TO cart
+			DESTROY window
+		END IF
+	END FUNCTION
+
+CLASS OrderSummaryGUI 
+	CONSTRUCTOR(root)
+		SET window TO root
+		SET windowGeometry TO 500 by 400 pixels
+		SET windowTitle TO “Order Summary”
+	END CONSTRUCTOR 
+	
+	FUNCTION openOrderSummary
+		SET cartTotal TO 0 
+		FOR item IN cart
+			DISPLAY item.getDetails 
+			cartTotal = cartTotal + itemPrice
+		END FOR
+		DISPLAY cartTotal
+	END FUNCTION
+END CLASS
+	
+CLASS PizzaGUI
+	CONSTRUCTOR(root)
+		SET window TO root
+		SET windowGeometry TO 500 by 400 pixels
+		SET windowTitle TO “Your way Pizza Parlour”
+		DECLARE self.pizzaTypeVar AS STRING
+		DECLARE self.pizzaSizeVar AS INTEGER
+		SET toppingSelection AS DICTIONARY
+	END CONSTRUCTOR
+	
+	FUNCTION addToCart()
+		TRY
+		IF window HAS ATTRIBUTE errorLabel THEN
+			DESTROY errorLabel
+		IF pizzaType == “--Select Pizza Type–” THEN
+			DISPLAY “Please Select pizza type” 
+		ELSE
+		FOR topping IN toppingChoices
+			IF topping IS CHECKED THEN 
+				self.toppingSelection[topping] = TRUE
+				END IF 
+END FOR 
+END IF
+GET pizzaType FROM COMBOBOX
+GET pizzaSize FROM SPINBOX
+CREATE new Pizza object 
+		APPEND Pizza object TO cart
+	EXCEPT ValueError
+		DISPLAY “Error: Input Error”
+	END TRY 
+END FUNCTION 
+END CLASS
+
+// Program Execution
+CREATE root AS TK ROOT WINDOW  
+CREATE new PizzaGUI object USING root
+CALL root.mainloop()
+
+END
